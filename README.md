@@ -1,3 +1,138 @@
+```c
+// Convert a y,m,d into a number of days since 1970. 0<=m<=11
+int getDayNumberFromDate(int y, int m, int d) {
+  int ans;
+
+  if (m < 2) {
+    y--;
+    m+=12;
+  }
+  ans = (y/100);
+  ans = 365*y + (y>>2) - ans + (ans>>2) + 30*m + ((3*m+6)/5) + d - 719531;
+  return ans;
+}
+
+// Convert a number of days since 1970 into y,m,d. 0<=m<=11
+void getDateFromDayNumber(int day, int *y, int *m, int *date) {
+  int a = day + 135081;
+  int b,c,d,e;
+  a = (a-(a/146097)+146095)/36524;
+  a = day + a - (a>>2);
+  c = ((a<<2)+2877911)/1461;
+  d = 365*c + (c>>2);
+  b = a + 719600 - d;
+  e = (5*b-1)/153;
+  if (date) *date=b-30*e-((3*e)/5);
+  if (m) {
+	if (e<14)
+      *m=e-2;
+    else
+      *m=e-14;
+  }
+  if (y) {
+    if (e>13)
+      *y=c+1;
+    else
+      *y=c;
+  }
+}
+
+// Given a set of DST change settings, calculate the time (in GMT
+// seconds since 1970) that the change happens in year y
+//
+// If as_local_time is true, then returns the number of seconds in
+// the timezone in effect, as opposed to GMT
+long getDstChangeTime(int y, int dow_number, int month, int dow,
+      int day_offset, int timeOfDay, bool is_start, int dst_offset,
+      int timezone, bool as_local_time) {
+  int m = month;
+  int ans;
+  if (dow_number == 4) { // last X of this month?
+    if (++m > 11) { // Work backwards from 1st of next month
+      y++;
+      m-=12;
+    }
+  }
+  ans = getDayNumberFromDate(y, m, 1); // (ans + 4) % 7 is 0 for SUN
+  // ((14 - ((ans + 4) % 7) + dow) % 7) is zero if 1st is our dow,
+  // 1 if 1st is the day before our dow etc
+  if (dow_number == 4) {
+    ans += ((14 - ((ans + 4) % 7) + dow) % 7) - 7;
+  } else {
+    ans += 7 * dow_number + (14 - ((ans + 4) % 7) + dow) % 7;
+  }
+  ans = (ans + day_offset) * 1440 + timeOfDay;
+  if (!as_local_time) {
+    ans -= timezone;
+    if (!is_start) ans -= dst_offset;
+  }
+  return 60l*ans;
+}
+
+// Returns the effective timezone in minutes east
+//
+// is_local_time is true if ms is referenced to local time,
+// false if it's referenced to GMT
+//
+// if is_dst is not zero, then it will be set to true if DST is
+// in effect
+int getEffectiveTimeZone(long ms, bool is_local_time, bool *is_dst) {
+  int y;
+  long sec = ms/1000;
+  long dstStart,dstEnd;
+      
+  getDateFromDayNumber(sec/86400,&y,0,0);
+  dstStart = getDstChangeTime(y, startDowNumber, startMonth, startDow,
+      startDayOffset, startTimeOfDay, 1, dstOffset, timezone,
+      is_local_time);
+  dstEnd = getDstChangeTime(y, endDowNumber, endMonth, endDow,
+      endDayOffset, endTimeOfDay, 0, dstOffset, timezone,
+      is_local_time);
+  // Now, check all permutations and combinations, noting that whereas
+  // in the northern hemisphere, dstStart<dstEnd, in the southern
+  // hemisphere dstEnd<dstStart
+  if (sec < dstStart) {
+    if (sec < dstEnd) {
+      if (dstStart < dstEnd) {
+		// Northern hemisphere - DST hasn't started yet
+		if (is_dst) *is_dst = false;
+	    return dstSetting[1];
+	  } else {
+		// Southern hemisphere - DST hasn't ended yet
+		if (is_dst) *is_dst = true;
+	    return dstSetting[0] + dstSetting[1];
+	  }
+    } else { // dstEnd <= sec < dstStart
+	  // Southern hemisphere - DST has ended for the winter
+	  if (is_dst) *is_dst = false;
+      return dstSetting[0];
+    }
+  } else { // sec >= dstStart
+    if (sec >= dstEnd) {
+	  if (dstStart < dstEnd) {
+		// Northern hemisphere - DST has ended
+		if (is_dst) *is_dst = false;
+        return dstSetting[1];
+	  } else {
+		// Southern hemisphere - DST has started
+		if (is_dst) *is_dst = true;
+		return dstSetting[0] + dstSetting[1];
+	  }
+    } else { // sec >= dstStart, sec < dstEnd
+	  // Northern hemisphere - DST has started for the summer
+	  if (is_dst) *is_dst = true;
+      return dstSetting[0] + dstSetting[1];
+	}
+  }
+}
+
+
+
+
+```
+
+
+
 `a = day + 135081` makes 1600/Feb/29 day zero
 
 `a - (a / 146097)` gets rid of the 400-year leap days, resulting in a calendar with a period of 100 years of 36,524 days each.
@@ -32,11 +167,3 @@ We use a concise formula for the cumulative number of days in the month, namely 
 So our "months" are 153/5 days on average.
 
 `a + 719600 - d` gives us 123 when the date is 1 March. So as we can see from the table above, the integer part of `(5*b-1)/153` gives us e.
-
-
-
-
-
-
-
-
