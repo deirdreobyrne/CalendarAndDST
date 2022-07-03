@@ -2,17 +2,17 @@
 // DST Settings
 //
 //  dstOffset - The number of minutes daylight savings time adds to the clock (usually 60)
-//	timezone - The time zone, in minutes, when DST is not in effect - positive east of Greenwich
-//	startDowNumber - The index of the day-of-week in the month when DST starts - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
-//	startDow - The day-of-week for the DST start calculation - 0 for Sunday, 6 for Saturday
-//	startMonth - The number of the month that DST starts - 0 for January, 11 for December
-//	startDayOffset - The number of days between the selected day-of-week and the actual day that DST starts - usually 0
-//	startTimeOfDay - The number of minutes elapsed in the day before DST starts
-//	endDowNumber - The index of the day-of-week in the month when DST ends - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
-//	endDow - The day-of-week for the DST end calculation - 0 for Sunday, 6 for Saturday
-//	endMonth - The number of the month that DST ends - 0 for January, 11 for December
-//	endDayOffset - The number of days between the selected day-of-week and the actual day that DST ends - usually 0
-//	endTimeOfDay - The number of minutes elapsed in the day before DST ends
+//  timezone - The time zone, in minutes, when DST is not in effect - positive east of Greenwich
+//  startDowNumber - The index of the day-of-week in the month when DST starts - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
+//  startDow - The day-of-week for the DST start calculation - 0 for Sunday, 6 for Saturday
+//  startMonth - The number of the month that DST starts - 0 for January, 11 for December
+//  startDayOffset - The number of days between the selected day-of-week and the actual day that DST starts - usually 0
+//  startTimeOfDay - The number of minutes elapsed in the day before DST starts
+//  endDowNumber - The index of the day-of-week in the month when DST ends - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
+//  endDow - The day-of-week for the DST end calculation - 0 for Sunday, 6 for Saturday
+//  endMonth - The number of the month that DST ends - 0 for January, 11 for December
+//  endDayOffset - The number of days between the selected day-of-week and the actual day that DST ends - usually 0
+//  endTimeOfDay - The number of minutes elapsed in the day before DST ends
 //
 
 
