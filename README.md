@@ -14,7 +14,19 @@
 //  endDayOffset - The number of days between the selected day-of-week and the actual day that DST ends - usually 0
 //  endTimeOfDay - The number of minutes elapsed in the day before DST ends
 //
-
+// To determine what the `dowNumber, dow, month, dayOffset, timeOfDay` parameters should be, start with
+// a sentence of the form "DST starts on the last Sunday of March (plus 0 days) at 03:00". Since it's
+// the last Sunday, we have startDowNumber = 4, and since it's Sunday, we have startDow = 0. That it
+// is March gives us startMonth = 2, and that the offset is zero days, we have startDayOffset = 0. The
+// time that DST starts gives us startTimeOfDay = 3*60.
+//
+// "DST ends on the Friday before the second Sunday in November at 02:00" would give us endDowNumber=1,
+// endDow=0, endMonth=10, endDayOffset=-2 and endTimeOfDay=120.
+//
+// Using Ukraine as an example, we have a time which is 2 hours ahead of GMT in winter (EET) and 3 hours
+// in summer (EEST). DST starts at 03:00 EET on the last Sunday in March, and ends at 04:00 EEST on the
+// last Sunday in October. So someone in Ukraine might use the parameters (60,120,4,0,2,0,180,4,0,9,0,240)
+//
 
 // Convert a y,m,d into a number of days since 1970. 0<=m<=11
 int getDayNumberFromDate(int y, int m, int d) {
