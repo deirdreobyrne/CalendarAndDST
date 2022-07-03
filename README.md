@@ -24,7 +24,7 @@ void getDateFromDayNumber(int day, int *y, int *m, int *date) {
   e = (5*b-1)/153;
   if (date) *date=b-30*e-((3*e)/5);
   if (m) {
-	if (e<14)
+    if (e<14)
       *m=e-2;
     else
       *m=e-14;
@@ -94,35 +94,35 @@ int getEffectiveTimeZone(long ms, bool is_local_time, bool *is_dst) {
   if (sec < dstStart) {
     if (sec < dstEnd) {
       if (dstStart < dstEnd) {
-		// Northern hemisphere - DST hasn't started yet
-		if (is_dst) *is_dst = false;
-	    return dstSetting[1];
-	  } else {
-		// Southern hemisphere - DST hasn't ended yet
-		if (is_dst) *is_dst = true;
-	    return dstSetting[0] + dstSetting[1];
-	  }
+        // Northern hemisphere - DST hasn't started yet
+        if (is_dst) *is_dst = false;
+        return dstSetting[1];
+      } else {
+        // Southern hemisphere - DST hasn't ended yet
+        if (is_dst) *is_dst = true;
+        return dstSetting[0] + dstSetting[1];
+      }
     } else { // dstEnd <= sec < dstStart
-	  // Southern hemisphere - DST has ended for the winter
-	  if (is_dst) *is_dst = false;
+      // Southern hemisphere - DST has ended for the winter
+      if (is_dst) *is_dst = false;
       return dstSetting[0];
     }
   } else { // sec >= dstStart
     if (sec >= dstEnd) {
-	  if (dstStart < dstEnd) {
-		// Northern hemisphere - DST has ended
-		if (is_dst) *is_dst = false;
+      if (dstStart < dstEnd) {
+        // Northern hemisphere - DST has ended
+        if (is_dst) *is_dst = false;
         return dstSetting[1];
-	  } else {
-		// Southern hemisphere - DST has started
-		if (is_dst) *is_dst = true;
-		return dstSetting[0] + dstSetting[1];
-	  }
+      } else {
+        // Southern hemisphere - DST has started
+        if (is_dst) *is_dst = true;
+        return dstSetting[0] + dstSetting[1];
+      }
     } else { // sec >= dstStart, sec < dstEnd
-	  // Northern hemisphere - DST has started for the summer
-	  if (is_dst) *is_dst = true;
+      // Northern hemisphere - DST has started for the summer
+      if (is_dst) *is_dst = true;
       return dstSetting[0] + dstSetting[1];
-	}
+    }
   }
 }
 
