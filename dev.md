@@ -81,7 +81,7 @@ In other words, if we take March 1<sup>st</sup> as day number *d=123*, then if w
 
 The first thing we need to do is to move our day zero to a useful date in the past when the 400-year cycle of the calendar started. We choose 1600/Feb/29 - the last leap day before the start of a run of 3 non-leap century years. This date corresponds to a day number of -135081. Hence we set `a=day+135081` as our starting point.
 
-We first need to correct for the 400-year leap days. We define the quantity `b=a/146097` (using integer division, as always). Hence the quantity *b* will be zero from 1600/Feb/29 to 2000/Feb/28, and will become 1 on 2000/Feb/29. Hence if we take `c=b-a`, we will remove the extra leap day that is inserted every 400 years. We will then be left with a quantity *c* that increases by 36524 days every 100 years. So the next task is to find out how many 100-year leap days have been removed.
+We first need to correct for the 400-year leap days. We define the quantity `b=a/146097` (using integer division, as always). Hence the quantity *b* will be zero from 1600/Feb/29 to 2000/Feb/28, and will become 1 on 2000/Feb/29. Hence if we take `c=a-b`, we will remove the extra leap day that is inserted every 400 years. We will then be left with a quantity *c* that increases by 36524 days every 100 years. So the next task is to find out how many 100-year leap days have been removed.
 
 The answer is, of course, `(c-1)/36524`. We need to subtract 1 from *c* to account for the fact that 1600/Mar/01 has a value of *c* of 1. We modify this equation slightly so that a new quantity *d* will be greater than zero - we use `d=(c-1+4*36524)/36524` or `d=(c+146095)/36524`.
 
