@@ -108,25 +108,24 @@ This gives us our final algorithm
 // Convert a number of days since 1970 into y,m,d. 0<=m<=11
 void getDateFromDayNumber(int day, int *y, int *m, int *date) {
   int a = day + 135081;
-  int b,c,d,e;
+  int b,c,d;
   a = (a-(a/146097)+146095)/36524;
   a = day + a - (a>>2);
-  c = ((a<<2)+2877911)/1461;
-  d = 365*c + (c>>2);
-  b = a + 719600 - d;
-  e = (5*b-1)/153;
-  if (date) *date=b-30*e-((3*e)/5);
+  b = ((a<<2)+2877911)/1461;
+  c = a + 719600 - 365*b - (b>>2);
+  d = (5*c-1)/153;
+  if (date) *date=c-30*d-((3*d)/5);
   if (m) {
-    if (e<14)
-      *m=e-2;
+    if (d<14)
+      *m=d-2;
     else
-      *m=e-14;
+      *m=d-14;
   }
   if (y) {
-    if (e>13)
-      *y=c+1;
+    if (d>13)
+      *y=b+1;
     else
-      *y=c;
+      *y=b;
   }
 }
 ```
