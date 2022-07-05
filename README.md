@@ -1,3 +1,7 @@
+_Based on algorithms in Jean Meeus' 1991 book "Astronomical Algorithms"_
+
+**todo** spit and polish
+
 ```c
 // DST Settings
 //
@@ -166,7 +170,7 @@ We now need a number corresponding to which century it is. Since the century sta
 
 `a = day + a - (a>>2)` - we are adding in the 3 leap years every 400 years. This gives us a calendar of 365.25 day years, or 1461/4 day years.
 
-Day number 59 corresponds to 1970/Mar/01, which is the first day of "1970" in our altered calendar. When the day number is 59, a is 65. `1970 * 1461 - 65 * 4 = 2877910`. We add in the extra 1 for good measure, to ensure no rounding errors when dividing by 1461.
+Day number 59 corresponds to 1970/Mar/01, which is the first day of "1970" in our altered calendar. When the day number is 59, a is 65. `1970 * 1461 - 65 * 4 = 2877910`. We add in the extra 1 for good measure _(actually is this the reason?! - needs to be checked)_, to ensure no rounding errors when dividing by 1461.
 
 d is the new day number to 1st March in the year in question
 
