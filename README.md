@@ -51,7 +51,7 @@ void getDateFromDayNumber(int day, int *y, int *m, int *date) {
   int b,c,d,e;
   a = (a-(a/146097)+146095)/36524;
   a = day + a - (a>>2);
-  c = ((a<<2)+2877911)/1461;
+  c = ((a<<2)+2877911)/1461; // <-- Not convinced about 2877911
   d = 365*c + (c>>2);
   b = a + 719600 - d;
   e = (5*b-1)/153;
