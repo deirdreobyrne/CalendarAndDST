@@ -87,7 +87,16 @@ The answer is, of course, `(c-1)/36524`. We need to subtract 1 from *c* to accou
 
 The quantity *d*, therefore, increases by 1 every March 1<sup>st</sup> in each century year, regardless of whether it's a 400-year or not. So the quantity `e = day+d-(d/4)` re-instates the 3 "missing" century leap days in every 400 year period. The quantity *e,* therefore, increases by an average of 365.25 each year.
 
-We are now able to calculate the year *λ*. We add a constant to *e* (to make the answer come out as 1970 on the appropriate dates) and divide by 365.25. However, using integer division, we cannot divide by 365.25, so we need to multiply everything by 4 and then divide by `365.25*4=1461`. It has been found that the correct constant to use is 2877911. Hence `λ=(4*e+2877911)/1461`.
+We are now able to calculate the year *λ*. We add a constant to *e* (to make the answer come out as 1970 on the appropriate dates) and divide by 365.25. However, using integer division, we cannot divide by 365.25, so we need to multiply everything by 4 and then divide by `365.25*4=1461`.
+
+So we want a formula of the form `λ=(4*e+constant)/1461`. In order to determine the value of the constant, we pick some values for *e* for which we know the corresponding value of *λ* and, using the relations that the minimum value of the constant would be `1461*λ-4*e` and the maximum value would be `1461*λ-4*e+1460` we can find the value of the constant.
+
+| Date        | λ    | Day | e   | Const. Min | Const. Max |
+| ----------- | ---- | --- | --- | ---------- | ---------- |
+| 1971/Mar/01 | 1971 | 424 | 430 | 2877911    | 2879371    |
+| 1972/Feb/29 | 1971 | 789 | 795 | 2876451    | 2877911    |
+
+Hence the correct constant to use is 2877911, and `λ=(4*e+2877911)/1461`.
 
 We are now close to calculating ε. We wish to calculate a quantity which is 123 on 1<sup>st</sup> March. Noting that *e=796* on 1<sup>st</sup> March 1972, and `365*λ+(λ/4)` is 720273 when *λ=1972,* if we calculate the quantity `e+719600-365*λ-(λ/4)` we get 123 for that date. Hence `f=e+719600-365*λ-(λ/4)` and `ε=(5*f-1)/153`.
 
@@ -135,27 +144,3 @@ The [Friday before|day of]
     of [February|March|April|September|October|November]
     at (time-of-day)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
