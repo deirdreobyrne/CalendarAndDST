@@ -2,13 +2,11 @@
 
 ## Converting from y/m/d into days since 1970/Jan/01
 
-To make our lives easier when it comes to leap years and 29<sup>th</sup> February, we define λ, ε and δ such that
+To make our lives easier when it comes to leap years and 29<sup>th</sup> February, we define λ, ε such that
 
 - *λ= y-1* for January, February; *λ = y* for March to December
 
 - *ε = 2 to 11* for March to December; *ε = 12, 13* for January, February
-
-- *δ = d - 1*
 
 This moves the leap day to the end of the "year" *λ-1*, which means that if the "year" *λ* is a leap year it should start one day later than it otherwise would. And, the definition of *ε* helps us with the varying lengths of the months, as if we examine the quantity `30*ε + ((3*ε+6)/5)` (where the division is strictly integer division), we get
 
@@ -64,30 +62,65 @@ int getDayNumberFromDate(int y, int m, int d) {
 
 For this conversion, we use a slightly different definition of ε, namely ε is 4 to 13 for March to December, and 14 and 15 for January and February. This gives us
 
-| Month     | ε   | `d=30*ε+((3*ε)/5)` | Diff to previous | `(5*d+4)/153`  |
-| --------- | --- | ------------------ | ---------------- | -------------- |
-| March     | 4   | 122                | n/a              | 4 ( + 2/153 )  |
-| April     | 5   | 153                | 31               | 5 ( + 4/153 )  |
-| May       | 6   | 183                | 30               | 6 ( + 1/153 )  |
-| June      | 7   | 214                | 31               | 7 ( + 3/153 )  |
-| July      | 8   | 244                | 30               | 8              |
-| August    | 9   | 275                | 31               | 9 ( + 2/153 )  |
-| September | 10  | 306                | 31               | 10 ( + 4/153 ) |
-| October   | 11  | 336                | 30               | 11 ( + 1/153 ) |
-| November  | 12  | 367                | 31               | 12 ( + 3/153 ) |
-| December  | 13  | 397                | 30               | 13             |
-| January   | 14  | 428                | 31               | 14 ( + 2/153 ) |
-| February  | 15  | 459                | 31               | 15 ( + 4/153 ) |
+| Month     | ε   | `d=30*ε+((3*ε)/5)+1` | Diff to prev. | `(5*d-1)/153`  |
+| --------- | --- | -------------------- | ------------- | -------------- |
+| March     | 4   | 123                  | n/a           | 4 ( + 2/153 )  |
+| April     | 5   | 154                  | 31            | 5 ( + 4/153 )  |
+| May       | 6   | 184                  | 30            | 6 ( + 1/153 )  |
+| June      | 7   | 215                  | 31            | 7 ( + 3/153 )  |
+| July      | 8   | 245                  | 30            | 8              |
+| August    | 9   | 276                  | 31            | 9 ( + 2/153 )  |
+| September | 10  | 307                  | 31            | 10 ( + 4/153 ) |
+| October   | 11  | 337                  | 30            | 11 ( + 1/153 ) |
+| November  | 12  | 368                  | 31            | 12 ( + 3/153 ) |
+| December  | 13  | 398                  | 30            | 13             |
+| January   | 14  | 429                  | 31            | 14 ( + 2/153 ) |
+| February  | 15  | 460                  | 31            | 15 ( + 4/153 ) |
 
-In other words, if we take March 1<sup>st</sup> as day number d=122, then if we use integer division, `(5*d+4)/153` will give us ε.
+In other words, if we take March 1<sup>st</sup> as day number *d=123*, then if we use integer division, `(5*d-1)/153` will give us ε.
 
-We first need to find out how many 400-year leap days have occurred. Noting that day number -135081 corresponds to 1600/Feb/29, the number of 400-year leap days is `a=(day+135081)/146097` (using integer division, as always).
+The first thing we need to do is to move our day zero to a useful date in the past when the 400-year cycle of the calendar started. We choose 1600/Feb/29 - the last leap day before the start of a run of 3 non-leap century years. This date corresponds to a day number of -135081. Hence we set `a=day+135081` as our starting point.
 
-The quantity *a* will be zero from 1600/Feb/29 to 2000/Feb/28, and will become 1 on 2000/Feb/29. Hence if we take `b=day-a`, we will remove the extra leap day that is inserted every 400 years. We will then be left with a quantity *b* that increases by 36524 days every 100 years. So the next task is to find out how many 100-year leap days have been removed.
+We first need to correct for the 400-year leap days. We define the quantity `b=a/146097` (using integer division, as always). Hence the quantity *b* will be zero from 1600/Feb/29 to 2000/Feb/28, and will become 1 on 2000/Feb/29. Hence if we take `c=b-a`, we will remove the extra leap day that is inserted every 400 years. We will then be left with a quantity *c* that increases by 36524 days every 100 years. So the next task is to find out how many 100-year leap days have been removed.
 
-The answer is, of course, `(b-1)/36524`. We need to subtract 1 from *b* to account for the fact that 1600/Mar/01 has a value of b of 1. We modify this equation slightly so that a new quantity *c* will be greater than zero - we use `c=(b-1+4*36524)/36524` or `c=(b+146095)/36524`.
+The answer is, of course, `(c-1)/36524`. We need to subtract 1 from *c* to account for the fact that 1600/Mar/01 has a value of *c* of 1. We modify this equation slightly so that a new quantity *d* will be greater than zero - we use `d=(c-1+4*36524)/36524` or `d=(c+146095)/36524`.
 
-The quantity *c*, therefore, increases by 1 every March 1<sup>st</sup> in each century year, regardless of whether it's a 400-year or not. So the quantity `d = day+c-(c/4)` re-instates the 3 "missing" century leap days in every 400 year period. *d*, therefore, increases by `4*365+1 = 1461` days every 4 years.
+The quantity *d*, therefore, increases by 1 every March 1<sup>st</sup> in each century year, regardless of whether it's a 400-year or not. So the quantity `e = day+d-(d/4)` re-instates the 3 "missing" century leap days in every 400 year period. The quantity *e,* therefore, increases by an average of 365.25 each year.
+
+We are now able to calculate the year *λ*. We add a constant to *e* (to make the answer come out as 1970 on the appropriate dates) and divide by 365.25. However, using integer division, we cannot divide by 365.25, so we need to multiply everything by 4 and then divide by `365.25*4=1461`. It has been found that the correct constant to use is 2877911. Hence `λ=(4*e+2877911)/1461`.
+
+We are now close to calculating ε. We wish to calculate a quantity which is 123 on 1<sup>st</sup> March. Noting that *e=796* on 1<sup>st</sup> March 1972, and `365*λ+(λ/4)` is 720273 when *λ=1972,* if we calculate the quantity `e+719600-365*λ-(λ/4)` we get 123 for that date. Hence `f=e+719600-365*λ-(λ/4)` and `ε=(5*f-1)/153`.
+
+We note that `30*ε+((3*ε)/5)` is one less than the day number corresponding to the 1st of the month, hence our day-of-month is `f-30*ε-((3*ε)/5)`.
+
+This gives us our final algorithm
+
+```c
+// Convert a number of days since 1970 into y,m,d. 0<=m<=11
+void getDateFromDayNumber(int day, int *y, int *m, int *date) {
+  int a = day + 135081;
+  int b,c,d,e;
+  a = (a-(a/146097)+146095)/36524;
+  a = day + a - (a>>2);
+  c = ((a<<2)+2877911)/1461;
+  d = 365*c + (c>>2);
+  b = a + 719600 - d;
+  e = (5*b-1)/153;
+  if (date) *date=b-30*e-((3*e)/5);
+  if (m) {
+    if (e<14)
+      *m=e-2;
+    else
+      *m=e-14;
+  }
+  if (y) {
+    if (e>13)
+      *y=c+1;
+    else
+      *y=c;
+  }
+}
+```
 
 
 
