@@ -122,7 +122,19 @@ void getDateFromDayNumber(int day, int *y, int *m, int *date) {
 }
 ```
 
+## Daylight savings time
 
+The algorithm to account for daylight savings time is quite simple. Just calculate when daylight savings time starts and ends in the current year, and then figure out whether DST is in effect.
+
+All of the current (June 2022) [rules for determining when DST starts and ends](https://en.wikipedia.org/wiki/Daylight_saving_time_by_country) (with the exception of the rules for Iran) can be summarised as
+
+```
+The [Friday before|day of]
+    the [first|second|fourth|last]
+    [Thursday|Friday|Saturday|Sunday]
+    of [February|March|April|September|October|November]
+    at (time-of-day)
+```
 
 
 
