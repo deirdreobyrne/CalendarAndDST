@@ -1,5 +1,9 @@
 # The Gregorian Calendar, and DST
 
+## Acknowledgement
+
+The algorithms for converting between day number and date are based on algorithms presented by Jean Meeus in his 1991 book *Astronomical Algorithms*.
+
 ## Converting from y/m/d into days since 1970/Jan/01
 
 To make our lives easier when it comes to leap years and 29<sup>th</sup> February, we define λ, ε such that
@@ -143,3 +147,24 @@ The [Friday before|day of]
     of [February|March|April|September|October|November]
     at (time-of-day)
 ```
+
+We use a set of 12 numbers to configure our DST rules. These are
+
+- *dstOffset* - The number of minutes daylight savings time adds to the clock (usually 60)
+- *timezone* - The time zone, in minutes, when DST is not in effect - positive east of Greenwich
+- *startDowNumber* - The index of the day-of-week in the month when DST starts - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
+- *startDow* - The day-of-week for the DST start calculation - 0 for Sunday, 6 for Saturday
+- *startMonth* - The number of the month that DST starts - 0 for January, 11 for December
+- *startDayOffset* - The number of days between the selected day-of-week and the actual day that DST starts - usually 0
+- *startTimeOfDay* - The number of minutes elapsed in the day before DST starts
+- *endDowNumber* - The index of the day-of-week in the month when DST ends - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
+- *endDow* - The day-of-week for the DST end calculation - 0 for Sunday, 6 for Saturday
+- *endMonth* - The number of the month that DST ends - 0 for January, 11 for December
+- *endDayOffset* - The number of days between the selected day-of-week and the actual day that DST ends - usually 0
+- *endTimeOfDay* - The number of minutes elapsed in the day before DST ends
+
+To determine what the `dowNumber, dow, month, dayOffset, timeOfDay` parameters should be, start with a sentence of the form *"DST starts on the last Sunday of March (plus 0 days) at 03:00"*. Since it's the last Sunday, we have startDowNumber = 4, and since it's Sunday, we have startDow = 0. That it is March gives us startMonth = 2, and that the offset is zero days, we have startDayOffset = 0. The time that DST starts gives us startTimeOfDay = 180.
+
+*"DST ends on the Friday before the second Sunday in November at 02:00"* would give us endDowNumber=1, endDow=0, endMonth=10, endDayOffset=-2 and endTimeOfDay=120.
+
+Using Ukraine as an example, we have a time which is 2 hours ahead of GMT in winter (EET) and 3 hours in summer (EEST). DST starts at 03:00 EET on the last Sunday in March, and ends at 04:00 EEST on the last Sunday in October. So someone in Ukraine might use the parameters (60,120,4,0,2,0,180,4,0,9,0,240).
