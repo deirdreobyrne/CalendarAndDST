@@ -237,16 +237,16 @@ int getEffectiveTimeZone(double ms, int *params, bool is_local_time,
   int dstStart,dstEnd;
   bool dstActive;
       
-  getDateFromDayNumber((int)(minutes/1440),&y,0,0);
+  getDateFromDayNumber(minutes/1440,&y,0,0);
   dstStart = getDstChangeTime(y, params[2], params[3],
     params[4], params[5], params[6], params[0], params[1], 1,
     is_local_time);
   dstEnd = getDstChangeTime(y, params[7], params[8], params[9],
     params[10], params[11], params[0], params[1], 0, is_local_time);
   if (dstStart < dstEnd) { // Northern hemisphere
-    dstActive = (sec >= dstStart) && (sec < dstEnd);
+    dstActive = (minutes >= dstStart) && (minutes < dstEnd);
   } else { // Southern hemisphere
-    dstActive = (sec < dstEnd) || (sec >= dstStart);
+    dstActive = (minutes < dstEnd) || (minutes >= dstStart);
   }
   if (is_dst) *is_dst=dstActive;
   return dstActive ? params[0]+params[1] : params[1];
