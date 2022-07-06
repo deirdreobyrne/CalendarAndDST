@@ -248,7 +248,8 @@ int getEffectiveTimeZone(double ms, int *params, bool is_local_time,
   // in the northern hemisphere, dstStart<dstEnd, in the southern
   // hemisphere dstEnd<dstStart
   //
-  // ((dstStart >= minutes) | (minutes < dstEnd)) ^ (dstStart < dstEnd)
+  // ((minutes >= dstStart) | (minutes < dstEnd)) ^ (dstStart < dstEnd)
+  // ((minutes < dstStart) | (minutes >= dstEnd)) ^ (dstEnd < dstStart)
   //
   if (minutes < dstStart) {
     if (minutes < dstEnd) {
