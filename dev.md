@@ -1,5 +1,13 @@
 # The Gregorian Calendar, and DST
 
+## Introduction
+
+The [Gregorian Calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) is the calendar most widely used in the world today, and so conversions regarding that calendar are a common task for computers.
+
+[Daylight savings time](https://en.wikipedia.org/wiki/Daylight_saving_time) ("DST") is another time-related phenomenon that computers have to deal with on a regular basis.
+
+The algorithms for dealing with the calendar and DST are often cumbersome, involving look-up tables and inefficient case-by-case logic. I present below algorithms which do not require look-up tables, and which I believe are as efficient as possible. These algorithms take advantage of integer arithmetic present in most modern computer languages.
+
 ## Acknowledgement
 
 The algorithms for converting between day number and date are based on algorithms presented by Jean Meeus in his 1991 book *Astronomical Algorithms*.
@@ -49,6 +57,7 @@ In C, we have
 
 ```c
 // Convert y,m,d into a number of days since 1970, where 0<=m<=11
+// https://github.com/deirdreobyrne/CalendarAndDST
 int getDayNumberFromDate(int y, int m, int d) {
   int ans;
 
@@ -57,8 +66,7 @@ int getDayNumberFromDate(int y, int m, int d) {
     m+=12;
   }
   ans = (y/100);
-  ans = 365*y + (y>>2) - ans + (ans>>2) + 30*m + ((3*m+6)/5) + d - 719531;
-  return ans;
+  return 365*y + (y>>2) - ans + (ans>>2) + 30*m + ((3*m+6)/5) + d - 719531;
 }
 ```
 
@@ -110,6 +118,7 @@ This gives us our final algorithm
 
 ```c
 // Convert a number of days since 1970 into y,m,d. 0<=m<=11
+// https://github.com/deirdreobyrne/CalendarAndDST
 void getDateFromDayNumber(int day, int *y, int *m, int *date) {
   int a = day + 135081;
   int b,c,d;
@@ -168,3 +177,108 @@ To determine what the `dowNumber, dow, month, dayOffset, timeOfDay` parameters s
 *"DST ends on the Friday before the second Sunday in November at 02:00"* would give us endDowNumber=1, endDow=0, endMonth=10, endDayOffset=-2 and endTimeOfDay=120.
 
 Using Ukraine as an example, we have a time which is 2 hours ahead of GMT in winter (EET) and 3 hours in summer (EEST). DST starts at 03:00 EET on the last Sunday in March, and ends at 04:00 EEST on the last Sunday in October. So someone in Ukraine might use the parameters (60,120,4,0,2,0,180,4,0,9,0,240).
+
+Hence our algorithm is
+
+```c
+// Given a set of DST change settings, calculate the time (in GMT
+// minutes since 1970) that the change happens in year y
+//
+// If is_start is true, then the given parameters are referring to
+// the start of DST
+//
+// If as_local_time is true, then returns the number of minutes in
+// the timezone in effect, as opposed to GMT
+//
+// https://github.com/deirdreobyrne/CalendarAndDST
+int getDstChangeTime(int y, int dow_number, int dow, int month,
+    int day_offset, int timeOfDay, int dst_offset,
+    int timezone, bool is_start, bool as_local_time) {
+  int ans;
+  if (dow_number == 4) { // last X of this month?
+    if (++month > 11) { // ... work backwards from 1st of next month
+      y++;
+      month-=12;
+    }
+  }
+  ans = getDayNumberFromDate(y, month, 1); // (ans + 4) % 7 is 0 for SUN
+  // ((14 - ((ans + 4) % 7) + dow) % 7) is zero if 1st is our dow,
+  // 1 if 1st is the day before our dow etc
+  if (dow_number == 4) {
+    ans += ((14 - ((ans + 4) % 7) + dow) % 7) - 7;
+  } else {
+    ans += 7 * dow_number + (14 - ((ans + 4) % 7) + dow) % 7;
+  }
+  ans = (ans + day_offset) * 1440 + timeOfDay;
+  if (!as_local_time) {
+    ans -= timezone;
+    if (!is_start) ans -= dst_offset;
+  }
+  return ans;
+}
+
+// Returns the effective timezone in minutes east
+//
+// params is the set of 12 numbers described above
+//
+// ms is the number of milliseconds since 1970 GMT
+//
+// is_local_time is true if ms is referenced to local time,
+// false if it's referenced to GMT
+//
+// if is_dst is not zero, then it will be set to true if DST is
+// in effect
+//
+// https://github.com/deirdreobyrne/CalendarAndDST
+int getEffectiveTimeZone(double ms, int *params, bool is_local_time,
+    bool *is_dst) {
+  int y;
+  int minutes = (int)(ms/60000);
+  int dstStart,dstEnd;
+  bool dstActive;
+      
+  getDateFromDayNumber((int)(minutes/1440),&y,0,0);
+  dstStart = getDstChangeTime(y, params[2], params[3],
+    params[4], params[5], params[6], params[0], params[1], 1,
+    is_local_time);
+  dstEnd = getDstChangeTime(y, params[7], params[8], params[9],
+    params[10], params[11], params[0], params[1], 0, is_local_time);
+  //
+  // Now, check all permutations and combinations, noting that whereas
+  // in the northern hemisphere, dstStart<dstEnd, in the southern
+  // hemisphere dstEnd<dstStart
+  //
+  // ((dstStart >= minutes) | (minutes < dstEnd)) ^ (dstStart < dstEnd)
+  //
+  if (minutes < dstStart) {
+    if (minutes < dstEnd) {
+      if (dstStart < dstEnd) {
+        // Northern hemisphere - DST hasn't started yet
+        dstActive=false;
+      } else {
+        // Southern hemisphere - DST hasn't ended yet
+        dstActive=true;
+      }
+    } else { // dstEnd <= minutes < dstStart
+      // Southern hemisphere - DST has ended for the winter
+      dstActive=false;
+    }
+  } else { // minutes >= dstStart
+    if (minutes >= dstEnd) {
+      if (dstStart < dstEnd) {
+        // Northern hemisphere - DST has ended
+        dstActive=false;
+      } else {
+        // Southern hemisphere - DST has started
+        dstActive=true;
+      }
+    } else { // minutes >= dstStart, minutes < dstEnd
+      // Northern hemisphere - DST has started for the summer
+      dstActive=true;
+    }
+  }
+  if (is_dst) *is_dst=dstActive;
+  return dstActive ? params[0]+params[1] : params[1];
+}
+
+```
