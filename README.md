@@ -221,7 +221,7 @@ int getDstChangeTime(int y, int dow_number, int dow, int month,
 //
 // params is the set of 12 numbers described above
 //
-// ms is the number of milliseconds since 1970 GMT
+// ms is the number of milliseconds since 1970
 //
 // is_local_time is true if ms is referenced to local time,
 // false if it's referenced to GMT
