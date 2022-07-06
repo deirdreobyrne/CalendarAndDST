@@ -243,40 +243,10 @@ int getEffectiveTimeZone(double ms, int *params, bool is_local_time,
     is_local_time);
   dstEnd = getDstChangeTime(y, params[7], params[8], params[9],
     params[10], params[11], params[0], params[1], 0, is_local_time);
-  //
-  // Now, check all permutations and combinations, noting that whereas
-  // in the northern hemisphere, dstStart<dstEnd, in the southern
-  // hemisphere dstEnd<dstStart
-  //
-  // ((minutes >= dstStart) | (minutes < dstEnd)) ^ (dstStart < dstEnd)
-  // ((minutes < dstStart) | (minutes >= dstEnd)) ^ (dstEnd < dstStart)
-  //
-  if (minutes < dstStart) {
-    if (minutes < dstEnd) {
-      if (dstStart < dstEnd) {
-        // Northern hemisphere - DST hasn't started yet
-        dstActive=false;
-      } else {
-        // Southern hemisphere - DST hasn't ended yet
-        dstActive=true;
-      }
-    } else { // dstEnd <= minutes < dstStart
-      // Southern hemisphere - DST has ended for the winter
-      dstActive=false;
-    }
-  } else { // minutes >= dstStart
-    if (minutes >= dstEnd) {
-      if (dstStart < dstEnd) {
-        // Northern hemisphere - DST has ended
-        dstActive=false;
-      } else {
-        // Southern hemisphere - DST has started
-        dstActive=true;
-      }
-    } else { // minutes >= dstStart, minutes < dstEnd
-      // Northern hemisphere - DST has started for the summer
-      dstActive=true;
-    }
+  if (dstStart < dstEnd) { // Northern hemisphere
+    dstActive = (sec >= dstStart) && (sec < dstEnd);
+  } else { // Southern hemisphere
+    dstActive = (sec < dstEnd) || (sec >= dstStart);
   }
   if (is_dst) *is_dst=dstActive;
   return dstActive ? params[0]+params[1] : params[1];
