@@ -6,7 +6,7 @@ The [Gregorian Calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) is th
 
 [Daylight savings time](https://en.wikipedia.org/wiki/Daylight_saving_time) ("DST") is another time-related phenomenon that computers have to deal with on a regular basis.
 
-The algorithms for dealing with the calendar and DST are often cumbersome, involving look-up tables and inefficient case-by-case logic. I present below algorithms which do not require look-up tables, and which I believe are as efficient as possible. These algorithms take advantage of integer arithmetic present in most modern computer languages.
+The algorithms for dealing with the calendar and DST are often cumbersome, involving look-up tables and inefficient case-by-case logic. I present below algorithms which do not require look-up tables, and which have been developed with the aim of making them have a small footprint on resource-limited hardware. These algorithms take advantage of integer arithmetic present in most modern computer languages.
 
 ## Acknowledgement
 
