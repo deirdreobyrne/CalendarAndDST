@@ -1,10 +1,125 @@
 # The Gregorian Calendar, and DST
 
+## tl;dr The code
+
+```c
+// Convert y,m,d into a number of days since 1970, where 0<=m<=11
+// https://github.com/deirdreobyrne/CalendarAndDST
+int getDayNumberFromDate(int y, int m, int d) {
+  int ans;
+
+  if (m < 2) {
+    y--;
+    m+=12;
+  }
+  ans = (y/100);
+  return 365*y + (y>>2) - ans + (ans>>2) + 30*m + ((3*m+6)/5) + d - 719531;
+}
+
+// Convert a number of days since 1970 into y,m,d. 0<=m<=11
+// https://github.com/deirdreobyrne/CalendarAndDST
+void getDateFromDayNumber(int day, int *y, int *m, int *date) {
+  int a = day + 135081;
+  int b,c,d;
+  a = (a-(a/146097)+146095)/36524;
+  a = day + a - (a>>2);
+  b = ((a<<2)+2877911)/1461;
+  c = a + 719600 - 365*b - (b>>2);
+  d = (5*c-1)/153;
+  if (date) *date=c-30*d-((3*d)/5);
+  if (m) {
+    if (d<14)
+      *m=d-2;
+    else
+      *m=d-14;
+  }
+  if (y) {
+    if (d>13)
+      *y=b+1;
+    else
+      *y=b;
+  }
+}
+
+// Given a set of DST change settings, calculate the time (in GMT
+// minutes since 1970) that the change happens in year y
+//
+// If is_start is true, then the given parameters are referring to
+// the start of DST
+//
+// If as_local_time is true, then returns the number of minutes in
+// the timezone in effect, as opposed to GMT
+//
+// https://github.com/deirdreobyrne/CalendarAndDST
+int getDstChangeTime(int y, int dow_number, int dow, int month,
+    int day_offset, int timeOfDay, int dst_offset,
+    int timezone, bool is_start, bool as_local_time) {
+  int ans;
+  if (dow_number == 4) { // last X of this month?
+    if (++month > 11) { // ... work backwards from 1st of next month
+      y++;
+      month-=12;
+    }
+  }
+  ans = getDayNumberFromDate(y, month, 1); // (ans + 4) % 7 is 0 for SUN
+  // ((14 - ((ans + 4) % 7) + dow) % 7) is zero if 1st is our dow,
+  // 1 if 1st is the day before our dow etc
+  if (dow_number == 4) {
+    ans += ((14 - ((ans + 4) % 7) + dow) % 7) - 7;
+  } else {
+    ans += 7 * dow_number + (14 - ((ans + 4) % 7) + dow) % 7;
+  }
+  ans = (ans + day_offset) * 1440 + timeOfDay;
+  if (!as_local_time) {
+    ans -= timezone;
+    if (!is_start) ans -= dst_offset;
+  }
+  return ans;
+}
+
+// Returns the effective timezone in minutes east
+//
+// params is the set of 12 numbers described below
+//
+// ms is the number of milliseconds since 1970
+//
+// is_local_time is true if ms is referenced to local time,
+// false if it's referenced to GMT
+//
+// if is_dst is not zero, then it will be set to true if DST is
+// in effect
+//
+// https://github.com/deirdreobyrne/CalendarAndDST
+int getEffectiveTimeZone(double ms, int *params, bool is_local_time,
+    bool *is_dst) {
+  int y;
+  int minutes = (int)(ms/60000);
+  int dstStart,dstEnd;
+  bool dstActive;
+      
+  getDateFromDayNumber(minutes/1440,&y,0,0);
+  dstStart = getDstChangeTime(y, params[2], params[3],
+    params[4], params[5], params[6], params[0], params[1], 1,
+    is_local_time);
+  dstEnd = getDstChangeTime(y, params[7], params[8], params[9],
+    params[10], params[11], params[0], params[1], 0, is_local_time);
+  if (dstStart < dstEnd) { // Northern hemisphere
+    dstActive = (minutes >= dstStart) && (minutes < dstEnd);
+  } else { // Southern hemisphere
+    dstActive = (minutes < dstEnd) || (minutes >= dstStart);
+  }
+  if (is_dst) *is_dst=dstActive;
+  return dstActive ? params[0]+params[1] : params[1];
+}
+
+```
+
+
 ## Introduction
 
 The [Gregorian Calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) is the calendar most widely used in the world today, and so conversions regarding that calendar are a common task for computers.
 
-[Daylight savings time](https://en.wikipedia.org/wiki/Daylight_saving_time) ("DST") is another time-related phenomenon that computers have to deal with on a regular basis.
+[Daylight saving time](https://en.wikipedia.org/wiki/Daylight_saving_time) ("DST") is another time-related phenomenon that computers have to deal with on a regular basis.
 
 The algorithms for dealing with the calendar and DST are often cumbersome, involving look-up tables and inefficient case-by-case logic. I present below algorithms which do not require look-up tables, and which have been developed with the aim of making them have a small footprint on resource-limited hardware. These algorithms take advantage of integer arithmetic present in most modern computer languages.
 
@@ -143,9 +258,9 @@ void getDateFromDayNumber(int day, int *y, int *m, int *date) {
 }
 ```
 
-## Daylight savings time
+## Daylight saving time
 
-The algorithm to account for daylight savings time is quite simple. Just calculate when daylight savings time starts and ends in the current year, and then figure out whether DST is in effect.
+The algorithm to account for daylight saving time is quite simple. Just calculate when daylight saving time starts and ends in the current year, and then figure out whether DST is in effect.
 
 All of the current (June 2022) [rules for determining when DST starts and ends](https://en.wikipedia.org/wiki/Daylight_saving_time_by_country) (with the exception of the rules for Iran) can be summarised as
 
@@ -159,7 +274,7 @@ The [Friday before|day of]
 
 We use a set of 12 numbers to configure our DST rules. These are
 
-- *dstOffset* - The number of minutes daylight savings time adds to the clock (usually 60)
+- *dstOffset* - The number of minutes daylight saving time adds to the clock (usually 60)
 - *timezone* - The time zone, in minutes, when DST is not in effect - positive east of Greenwich
 - *startDowNumber* - The index of the day-of-week in the month when DST starts - 0 for first, 1 for second, 2 for third, 3 for fourth and 4 for last
 - *startDow* - The day-of-week for the DST start calculation - 0 for Sunday, 6 for Saturday
