@@ -2,6 +2,8 @@
 
 ## tl;dr The code
 
+Note to self - fails at day number -317703 (will document later) (-317702 is 1st Mar 1100)
+
 ```c
 // Convert y,m,d into a number of days since 1970, where 0<=m<=11
 // https://github.com/deirdreobyrne/CalendarAndDST
